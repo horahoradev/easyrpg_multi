@@ -64,8 +64,8 @@ RUN cd /multi_server/public/play/gamesdefault/ВфВ▀2В┴Вл/ && \
 
 RUN /bin/bash -c 'mv /multi_server/public/play/gamesdefault/ВфВ▀2В┴Вл/* /multi_server/public/play/gamesdefault/'
 
-COPY --from=0 /workdir/ynoclient/build/index.wasm /multi_server/public
-COPY --from=0 /workdir/ynoclient/build/index.js /multi_server/public
+COPY --from=0 /workdir/easyrpg_multi/build/index.wasm /multi_server/public
+COPY --from=0 /workdir/easyrpg_multi/build/index.js /multi_server/public
 
 COPY play.html /multi_server/public
 COPY play.css /multi_server/public
@@ -73,8 +73,5 @@ COPY chat.js /multi_server/public
 
 COPY index.html /multi_server/public
 
-
-RUN apt-get install -y sudo
-
-ENTRYPOINT ["sudo", "./multi_server"]
+ENTRYPOINT ["./multi_server"]
 
