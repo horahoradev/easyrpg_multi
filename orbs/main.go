@@ -49,13 +49,7 @@ func main() {
 		log.Fatal("Could not convert charset to map[string]interface{}")
 	}
 
-	cIntermediate, ok := charset["вфв▀2в┴вл"].(map[string]interface{})
-	if !ok {
-		log.Fatal("Could not convert cintermediate to map[string]interface{}")
-	}
-
-
-	vals, ok := cIntermediate["charset"].(map[string]interface{})
+	vals, ok := charset["charset"].(map[string]interface{})
 	if !ok {
 		log.Fatal("Could not convert vals to map[string]interface{}")
 	}
