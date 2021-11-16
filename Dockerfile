@@ -17,7 +17,7 @@ RUN  /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh &&
 RUN apt-get install -y ninja-build
 
 # Build ynoclient
-RUN /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone https://github.com/horahoradev/easyrpg_multi.git && ln -s /workdir /root/workdir && cd easyrpg_multi && ./cmake_build.sh && cd build && /usr/bin/ninja'
+RUN /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone --depth 1 https://github.com/horahoradev/easyrpg_multi.git && ln -s /workdir /root/workdir && cd easyrpg_multi && ./cmake_build.sh && cd build && /usr/bin/ninja'
 
 
 FROM ubuntu:rolling
