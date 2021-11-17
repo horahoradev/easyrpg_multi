@@ -17,8 +17,7 @@ RUN  /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh &&
 RUN apt-get install -y ninja-build
 
 # Build ynoclient
-RUN /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone --depth 1 https://github.com/horahoradev/easyrpg_multi.git && ln -s /workdir /root/workdir && cd easyrpg_multi && ./cmake_build.sh && cd build && /usr/bin/ninja'
-
+RUN /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone https://github.com/horahoradev/ynoclient.git && ln -s /workdir /root/workdir && cd ynoclient && ./cmake_build.sh && cd build && /usr/bin/ninja && echo "done"'
 
 FROM ubuntu:rolling
 
@@ -43,7 +42,7 @@ RUN cd orbs && \
 	go mod vendor && \
     go build --mod=vendor -o /multi_server/multi_server .
 
-RUN apt-get install -y python3 unzip python3-pip locales && \
+RUN apt-get install -y python3 unzip python3-pip locales locales-all && \
 	pip install gdown
 
 RUN locale-gen ja_JP.UTF-8
@@ -53,19 +52,19 @@ ENV LC_ALL ja_JP.UTF-8
 
 RUN gdown https://drive.google.com/uc?id=1-Oo8BsA1-bMFZoHuhfvvaASh1QJthrpk -O ./public/y2kki.zip && \
 	cd public && \
-	unzip ./y2kki.zip && \
+	unzip -O shift-jis ./y2kki.zip && \
 	mkdir -p /multi_server/public/play/ && \
 	/bin/bash -c 'mv /multi_server/public/*ver0.113* /multi_server/public/play/gamesdefault'
 
-COPY gencache /multi_server/public/play/gamesdefault/ВфВ▀2В┴Вл/
+COPY gencache /multi_server/public/play/gamesdefault/ゆめ2っき/
 
-RUN cd /multi_server/public/play/gamesdefault/ВфВ▀2В┴Вл/ && \
+RUN cd /multi_server/public/play/gamesdefault/ゆめ2っき/ && \
 	./gencache
 
-RUN /bin/bash -c 'mv /multi_server/public/play/gamesdefault/ВфВ▀2В┴Вл/* /multi_server/public/play/gamesdefault/'
+RUN /bin/bash -c 'mv /multi_server/public/play/gamesdefault/ゆめ2っき/* /multi_server/public/play/gamesdefault/'
 
-COPY --from=0 /workdir/easyrpg_multi/build/index.wasm /multi_server/public
-COPY --from=0 /workdir/easyrpg_multi/build/index.js /multi_server/public
+COPY --from=0 /workdir/ynoclient/build/index.wasm /multi_server/public
+COPY --from=0 /workdir/ynoclient/build/index.js /multi_server/public
 
 COPY play.html /multi_server/public
 COPY play.css /multi_server/public
