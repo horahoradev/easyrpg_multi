@@ -49,11 +49,11 @@ ENV LANG ja_JP.UTF-8
 ENV LANGUAGE ja_JP
 ENV LC_ALL ja_JP.UTF-8
 
-RUN gdown https://drive.google.com/file/d/1c8g2XBLFQ6L6KNrmI3njhgk714uX0p3W/view -O ./public/y2kki.zip && \
+RUN gdown https://drive.google.com/uc?id=1c8g2XBLFQ6L6KNrmI3njhgk714uX0p3W -O ./public/y2kki.zip && \
 	cd public && \
 	unzip -O shift-jis ./y2kki.zip && \
 	mkdir -p /multi_server/public/play/ && \
-	/bin/bash -c 'mv /multi_server/public/*ver0.117g* /multi_server/public/play/gamesdefault'
+	/bin/bash -c 'mv /multi_server/public/ゆめ2っきver0.117g /multi_server/public/play/gamesdefault'
 
 COPY gencache /multi_server/public/play/gamesdefault/ゆめ2っき/
 
