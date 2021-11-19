@@ -13,7 +13,7 @@ import (
 
 var (
 	res_index_path = "public/play/gamesdefault/index.json"
-	NUM_ROOMS = 180 //!!! change this if not hosting yume nikki
+	NUM_ROOMS = 3000 //!!! change this if not hosting yume nikki
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	log.Println("test" + delimchar + "test")
 
 	port := os.Getenv("PORT")
-	
+
 	if (port == "") {
 		//log.Fatal("$PORT must be set")
 		port = "8080"
@@ -52,7 +52,7 @@ func main() {
 	for i:=0; i < NUM_ROOMS; i++ {
 		roomNames = append(roomNames, strconv.Itoa(i))
 	}
-	
+
 	for name := range roomNames {
 		hub := orbserver.NewHub(roomNames[name], spriteNames)
 		go hub.Run()
