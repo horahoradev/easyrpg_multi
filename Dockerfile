@@ -36,8 +36,9 @@ RUN cd /usr/local && \
 
 ENV PATH=$PATH:/usr/local/go/bin
 
-RUN git clone https://github.com/twig33/orbs.git && \
-	cd orbs && \
+COPY orbs orbs
+
+RUN cd orbs && \
 	go mod vendor && \
     go build --mod=vendor -o /multi_server/multi_server .
 
