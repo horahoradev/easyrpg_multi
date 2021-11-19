@@ -173,9 +173,11 @@
           </form>
         </div>
         <div id="enterNameContainer">
-          You must set a nickname before you can chat. (wip)
-          <br>
-          Max 7 characters. Enter numbers and latin letters only.
+          <label id="enterNameInstruction">
+            You must set a nickname before you can chat. (wip)
+            <br>
+            Max 7 characters. Enter numbers and latin letters only.
+          </label>
           <form action="javascript:chatNameCheck()">
             <input id="nameInput" type="text" autocomplete="off" maxlength="7"></input>
           </form>
@@ -184,6 +186,12 @@
     </tr>
   </table>
 
+<br>
+Press 3 to hide/show the connection status window
+<br>
+<a href="https://github.com/twig33/orbs">Server source code</a>
+<br>
+<a href="https://github.com/twig33/ynoclient">Client source code</a>
 <script type="text/javascript" src="index.js"></script>
 <script type="text/javascript" src="chat.js"></script>
 

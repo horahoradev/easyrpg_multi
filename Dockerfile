@@ -36,9 +36,8 @@ RUN cd /usr/local && \
 
 ENV PATH=$PATH:/usr/local/go/bin
 
-COPY orbs orbs
-
-RUN cd orbs && \
+RUN git clone https://github.com/twig33/orbs.git && \
+	cd orbs && \
 	go mod vendor && \
     go build --mod=vendor -o /multi_server/multi_server .
 
@@ -50,11 +49,11 @@ ENV LANG ja_JP.UTF-8
 ENV LANGUAGE ja_JP
 ENV LC_ALL ja_JP.UTF-8
 
-RUN gdown https://drive.google.com/uc?id=1-Oo8BsA1-bMFZoHuhfvvaASh1QJthrpk -O ./public/y2kki.zip && \
+RUN gdown https://drive.google.com/file/d/1c8g2XBLFQ6L6KNrmI3njhgk714uX0p3W/view -O ./public/y2kki.zip && \
 	cd public && \
 	unzip -O shift-jis ./y2kki.zip && \
 	mkdir -p /multi_server/public/play/ && \
-	/bin/bash -c 'mv /multi_server/public/*ver0.113* /multi_server/public/play/gamesdefault'
+	/bin/bash -c 'mv /multi_server/public/*ver0.117g* /multi_server/public/play/gamesdefault'
 
 COPY gencache /multi_server/public/play/gamesdefault/ゆめ2っき/
 
@@ -66,9 +65,7 @@ RUN /bin/bash -c 'mv /multi_server/public/play/gamesdefault/ゆめ2っき/* /mul
 COPY --from=0 /workdir/ynoclient/build/index.wasm /multi_server/public
 COPY --from=0 /workdir/ynoclient/build/index.js /multi_server/public
 
-COPY play.html /multi_server/public
-COPY play.css /multi_server/public
-COPY chat.js /multi_server/public
+COPY orbs/public /multi_server/public
 
 COPY index.html /multi_server/public
 

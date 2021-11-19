@@ -13,7 +13,7 @@ import (
 
 var (
 	res_index_path = "public/play/gamesdefault/index.json"
-	NUM_ROOMS = 500 //!!! change this if not hosting yume nikki
+	NUM_ROOMS = 180 //!!! change this if not hosting yume nikki
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	log.Println("test" + delimchar + "test")
 
 	port := os.Getenv("PORT")
-
+	
 	if (port == "") {
 		//log.Fatal("$PORT must be set")
 		port = "8080"
@@ -39,24 +39,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cache, ok := res_index.(map[string]interface{})
-	if !ok {
-		log.Fatal("could not convert cache to map[string]interface{}")
-	}
-
-	charset, ok := cache["cache"].(map[string]interface{})
-	if !ok {
-		log.Fatal("Could not convert charset to map[string]interface{}")
-	}
-
-	vals, ok := charset["charset"].(map[string]interface{})
-	if !ok {
-		log.Fatal("Could not convert vals to map[string]interface{}")
-	}
-
 	//list of valid game character sprite resource keys
 	var spriteNames []string
-	for k := range vals {
+	for k := range res_index.(map[string]interface{})["cache"].(map[string]interface{})["charset"].(map[string]interface{}) {
 		if k != "_dirname" {
 			spriteNames = append(spriteNames, k)
 		}
@@ -67,7 +52,7 @@ func main() {
 	for i:=0; i < NUM_ROOMS; i++ {
 		roomNames = append(roomNames, strconv.Itoa(i))
 	}
-
+	
 	for name := range roomNames {
 		hub := orbserver.NewHub(roomNames[name], spriteNames)
 		go hub.Run()
