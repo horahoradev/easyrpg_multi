@@ -68,7 +68,6 @@ COPY --from=0 /workdir/ynoclient/build/index.js /multi_server/public
 
 COPY orbs/public /multi_server/public
 
-COPY index.html /multi_server/public
 
 ENTRYPOINT ["./multi_server"]
 

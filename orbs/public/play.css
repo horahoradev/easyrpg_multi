@@ -8,7 +8,7 @@ html {
   font-family: 'MS Gothic', 'Gothic';
   font-size: 16px;
   color: rgba(216, 216, 216, 1);
-  background: url(images/ui/containerbg.png) !important;
+  background-color: black;
 }
 
 #game_frame {
@@ -24,7 +24,7 @@ html {
 
 #messages, #chatInputContainer, #enterNameContainer {
   border: 8px solid transparent;
-  border-image: url(images/ui/border.png) 8 repeat !important;
+  border-image: url('images/ui/border.png') 10 repeat !important;
 }
 
 #messages {
@@ -40,7 +40,7 @@ html {
 
 #messages::-webkit-scrollbar-track {
   border: 8px solid transparent;
-  border-image: url(images/ui/border.png) 8 repeat !important;
+  border-image: url('images/ui/border.png') 8 repeat !important;
   background-color: rgba(45, 17, 23, 1);
   image-rendering: crisp-edges;
   image-rendering: pixelated;
@@ -48,7 +48,7 @@ html {
 
 #messages::-webkit-scrollbar-thumb {
   border: 8px solid transparent;
-  border-image: url(images/ui/border.png) 6 round !important;
+  border-image: url('images/ui/border.png') 6 round !important;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
 }
@@ -75,16 +75,20 @@ html {
 }
 
 #enterNameInstruction, .message {
-  background-image: url(images/ui/font1.png) !important;
+  background-image: url('images/ui/font1.png') !important;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(1.5px 1.5px black);
 }
 
+#instructions {
+  text-align: center;
+}
+
 .message {
   border-bottom: 4px solid transparent;
-  border-image: url(images/ui/border.png) 8 repeat !important;
+  border-image: url('images/ui/border.png') 8 repeat !important;
   word-wrap: break-word;
 }
 
@@ -94,8 +98,8 @@ tr, td, div, input[type='text'] {
 }
 
 tr, td {
-  background: url(images/ui/containerbg.png) !important;
-  border-image: url(images/ui/border.png) 10 repeat !important;
+  background: url('images/ui/containerbg.png') !important;
+  border-image: url('images/ui/border.png') 10 repeat !important;
   border: 24px solid transparent;
 }
 
@@ -107,7 +111,7 @@ table {
 
 input[type='text'] {
   border: 4px solid transparent;
-  border-image: url(images/ui/border.png) 8 repeat !important;
+  border-image: url('images/ui/border.png') 8 repeat !important;
   color: white;
   background-color: transparent;
   text-shadow: 1.5px 1.5px black;

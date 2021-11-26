@@ -6,7 +6,6 @@ package orbserver
 
 import (
 	"bytes"
-	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -41,13 +40,20 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	send chan []byte
 
+	// IP address of the client
+	ip string
+	banned bool
+
 	id int
 	x, y int
 	spd int
 	name string
-	
+
 	spriteName string
 	spriteIndex int
+
+	systemName string
+	privilegedSession bool
 }
 
 type Message struct {
@@ -72,7 +78,7 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				writeLog("127.0.0.1", err.Error(), 500)
 			}
 			break
 		}

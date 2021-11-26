@@ -9,17 +9,22 @@ import (
 	"strconv"
 	"io/ioutil"
 	"encoding/json"
+	"gopkg.in/natefinch/lumberjack.v2"
+	guuid "github.com/google/uuid"
+
 )
 
 var (
 	res_index_path = "public/play/gamesdefault/index.json"
-	NUM_ROOMS = 3000 //!!! change this if not hosting yume nikki
+	log_file = "logs/orbs.log"
+	NUM_ROOMS = 180 //!!! change this if not hosting yume nikki
 )
 
-func main() {
-	delimchar := "\uffff";
-	log.Println("test" + delimchar + "test")
+func writeLog(ip string, payload string, errorcode int) {
+	log.Printf("%v \"%v\" %v\n", ip, payload, errorcode)
+}
 
+func main() {
 	port := os.Getenv("PORT")
 
 	if (port == "") {
@@ -47,21 +52,42 @@ func main() {
 		}
 	}
 
+	//list of valid system resource keys
+	var systemNames []string
+	for k := range res_index.(map[string]interface{})["cache"].(map[string]interface{})["system"].(map[string]interface{}) {
+		if k != "_dirname" {
+			systemNames = append(systemNames, k)
+		}
+	}
+
 	var roomNames []string
 
 	for i:=0; i < NUM_ROOMS; i++ {
 		roomNames = append(roomNames, strconv.Itoa(i))
 	}
 
-	for name := range roomNames {
-		hub := orbserver.NewHub(roomNames[name], spriteNames)
-		go hub.Run()
+	uuid, err := guuid.NewUUID()
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	log.Printf("Authentication uuid is: %s", uuid.String())
+
+	orbserver.CreateAllHubs(roomNames, spriteNames, systemNames, uuid.String())
+
 	//http.Handle("/", httpfileserver.New("/", "public/"))
+
+	log.SetOutput(&lumberjack.Logger{
+		Filename:   log_file,
+		MaxSize:    100, // MB
+		MaxBackups: 6,
+		MaxAge:     28, //days
+	})
+	log.SetFlags(log.Ldate | log.Ltime)
+
 	http.Handle("/", http.FileServer(http.Dir("public/")))
 	//http.HandleFunc("/", Handler)
-	log.Fatal(http.ListenAndServe(":" + port, nil))
+	log.Fatalf("%v \"%v\" %v", "127.0.0.1", http.ListenAndServe(":" + port, nil), 500)
 }
 
 /*func Handler(w http.ResponseWriter, r *http.Request) {

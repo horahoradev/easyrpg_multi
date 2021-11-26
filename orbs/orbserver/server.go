@@ -5,12 +5,14 @@
 package orbserver
 
 import (
+	"fmt"
 	"net/http"
 	"log"
 	"strconv"
 	"strings"
 	"regexp"
 	"errors"
+	"unicode/utf8"
 
 	"github.com/gorilla/websocket"
 )
@@ -29,6 +31,33 @@ var (
 	delimrune = '\uffff'
 )
 
+type ConnInfo struct {
+	Connect *websocket.Conn
+	Ip string
+}
+
+type HubController struct {
+	hubs []*Hub
+	authUUID string
+}
+
+func (h *HubController) addHub(roomName string, spriteNames, systemNames []string) {
+	hub := NewHub(roomName, spriteNames, systemNames, h)
+	h.hubs = append(h.hubs, hub)
+	go hub.Run()
+}
+
+func (h *HubController) auth(inpUUID string) bool {
+	return inpUUID == h.authUUID
+}
+
+func (h *HubController) globalBroadcast(inpData []byte) {
+	for _, hub := range h.hubs {
+		hub.broadcast(inpData)
+	}
+}
+
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -42,25 +71,49 @@ type Hub struct {
 	processMsgCh chan *Message
 
 	// Connection requests from the clients.
-	connect chan *websocket.Conn
+	connect chan *ConnInfo
 
 	// Unregister requests from clients.
 	unregister chan *Client
 
 	roomName string
-	//list of valid game character sprite resource keys 
+	//list of valid game character sprite resource keys
 	spriteNames []string
+	systemNames []string
+
+	controller *HubController
 }
 
-func NewHub(roomName string, spriteNames []string) *Hub {
+func writeLog(ip string, payload string, errorcode int) {
+	log.Printf("%v \"%v\" %v\n", ip, strings.Replace(payload, "\"", "'", -1), errorcode)
+}
+
+func writeErrLog(ip string, payload string) {
+	writeLog(ip, payload, 400)
+}
+
+func CreateAllHubs(roomNames, spriteNames, systemNames []string, authUUID string) {
+	h := HubController{
+		authUUID: authUUID,
+	}
+
+	for _, roomName := range roomNames {
+		h.addHub(roomName, spriteNames, systemNames)
+	}
+}
+
+
+func NewHub(roomName string, spriteNames []string, systemNames []string, h *HubController) *Hub {
 	return &Hub{
 		processMsgCh:  make(chan *Message),
-		connect:   make(chan *websocket.Conn),
+		connect:   make(chan *ConnInfo),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 		id: make(map[int]bool),
 		roomName: roomName,
 		spriteNames: spriteNames,
+		systemNames: systemNames,
+		controller: h,
 	}
 }
 
@@ -76,34 +129,72 @@ func (h *Hub) Run() {
 					break
 				}
 			}
+
+			ip_limit := 2
+			same_ip := 0
+			for other_client := range h.clients {
+				log.Println(other_client.ip, conn.Ip)
+				if other_client.ip == conn.Ip {
+					same_ip++
+				}
+				if same_ip >= ip_limit {
+					writeErrLog(conn.Ip, "max client in room exceeded")
+					break
+				}
+			}
+
 			//sprite index < 0 means none
-			client := &Client{hub: h, conn: conn, send: make(chan []byte, 256), id: id, x: 0, y: 0, name: "", spd: 3, spriteName: "none", spriteIndex: -1}
+			client := &Client{
+				hub: h,
+				conn: conn.Connect,
+				ip: conn.Ip,
+				banned: same_ip >= ip_limit,
+				send: make(chan []byte, 256),
+				id: id,
+				x: 0,
+				y: 0,
+				name: "",
+				spd: 3,
+				spriteName:	"none",
+				spriteIndex: -1}
 			go client.writePump()
 			go client.readPump()
 
+			client.send <- []byte("say" + delimstr + fmt.Sprintf("This room has %d players.", len(h.clients) + 1))
 			client.send <- []byte("s" + delimstr + strconv.Itoa(id)) //"your id is %id%" message
 			//send the new client info about the game state
 			for other_client := range h.clients {
 				client.send <- []byte("c" + delimstr + strconv.Itoa(other_client.id))
 				client.send <- []byte("m" + delimstr + strconv.Itoa(other_client.id) + delimstr + strconv.Itoa(other_client.x) + delimstr + strconv.Itoa(other_client.y));
 				client.send <- []byte("spd" + delimstr + strconv.Itoa(other_client.id) + delimstr + strconv.Itoa(other_client.spd));
+				if other_client.name != "" {
+					client.send <- []byte("name" + delimstr + strconv.Itoa(other_client.id) + delimstr + other_client.name);
+				}
 				if other_client.spriteIndex >= 0 { //if the other client sent us valid sprite and index before
 					client.send <- []byte("spr" + delimstr + strconv.Itoa(other_client.id) + delimstr + other_client.spriteName + delimstr + strconv.Itoa(other_client.spriteIndex));
+				}
+				if other_client.systemName != "" {
+					client.send <- []byte("sys" + delimstr + strconv.Itoa(other_client.id) + other_client.systemName);
 				}
 			}
 			//register client in the structures
 			h.id[id] = true
 			h.clients[client] = true
 			//tell everyone that a new client has connected
-			h.broadcast([]byte("c" + delimstr + strconv.Itoa(id))) //user %id% has connected
+			if !client.banned {
+				h.broadcast([]byte("c" + delimstr + strconv.Itoa(id))) //user %id% has connected
+			}
+
+			writeLog(conn.Ip, "connect", 200)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				h.deleteClient(client)
 			}
+			writeLog(client.ip, "disconnect", 200)
 		case message := <-h.processMsgCh:
 			err := h.processMsg(message)
 			if err != nil {
-				log.Println(err)
+				writeErrLog(message.sender.ip, err.Error())
 			}
 		}
 	}
@@ -117,7 +208,11 @@ func (hub *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	hub.connect <- conn
+	ip := r.Header.Get("x-forwarded-for")
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
+	hub.connect <- &ConnInfo{Connect: conn, Ip: strings.Split(ip, ":")[0]}
 }
 
 func (h *Hub) broadcast(data []byte) {
@@ -138,11 +233,34 @@ func (h *Hub) deleteClient(client *Client) {
 }
 
 func (h *Hub) processMsg(msg *Message) error {
+	if msg.sender.banned {
+		return errors.New("Banned")
+	}
+
+	if len(msg.data) > 1024 {
+		return errors.New("Request too long")
+	}
+
+	for _, v := range msg.data {
+		if v < 32 {
+			return errors.New("Bad byte sequence")
+		}
+	}
+
+	if !utf8.Valid(msg.data) {
+		return errors.New("Invalid UTF-8")
+	}
+
 	msgStr := string(msg.data[:])
-	err := errors.New("Invalid message: " + msgStr)
+
+	err := errors.New(msgStr)
 	msgFields := strings.FieldsFunc(msgStr, func(c rune) bool {
 		return c == delimrune
 	}) //split message string on delimiting character
+
+	if len(msgFields) == 0 {
+		return err
+	}
 
 	switch msgFields[0] {
 	case "m": //"i moved to x y"
@@ -170,7 +288,7 @@ func (h *Hub) processMsg(msg *Message) error {
 			return err
 		}
 		if spd < 0 || spd > 10 { //something's not right
-			return err	
+			return err
 		}
 		msg.sender.spd = spd
 		h.broadcast([]byte("spd" + delimstr + strconv.Itoa(msg.sender.id) + delimstr + msgFields[1]));
@@ -188,6 +306,15 @@ func (h *Hub) processMsg(msg *Message) error {
 		msg.sender.spriteName = msgFields[1]
 		msg.sender.spriteIndex = index
 		h.broadcast([]byte("spr" + delimstr + strconv.Itoa(msg.sender.id) + delimstr + msgFields[1] + delimstr + msgFields[2]));
+	case "sys": //change my system graphic
+		if len(msgFields) != 2 {
+			return err
+		}
+		if !h.isValidSystemName(msgFields[1]) {
+			return err
+		}
+		msg.sender.systemName = msgFields[1];
+		h.broadcast([]byte("sys" + delimstr + strconv.Itoa(msg.sender.id) + delimstr + msgFields[1]));
 	case "say":
 		if len(msgFields) != 2 {
 			return err
@@ -195,22 +322,57 @@ func (h *Hub) processMsg(msg *Message) error {
 		if msg.sender.name == "" {
 			return err
 		}
-		h.broadcast([]byte("say" + delimstr + "<" + msg.sender.name + "> " + msgFields[1]))
-	case "name":
+
+		msgContents := msgFields[1]
+
+		// If it's a global message, broadcast it to every hub
+		// Otherwise, broadcast only to the current hub
+		switch {
+		case strings.HasPrefix(msgContents, "!login "):
+			msgContents := msgContents[7:]
+			log.Printf("Trying to login with %s", msgContents)
+			if h.controller.auth(msgContents) {
+				msg.sender.send <- []byte("say" + delimstr + "Login successful")
+				msg.sender.privilegedSession = true
+			} else {
+				msg.sender.send <- []byte("say" + delimstr + "Login unsuccessful")
+			}
+
+		case strings.HasPrefix(msgContents, "!global ") && msg.sender.privilegedSession:
+			msgContents := msgContents[8:]
+			h.controller.globalBroadcast([]byte("say" + delimstr + "<" + msg.sender.name + "> " + fmt.Sprintf("(GLOBAL) %s", msgContents)))
+		case strings.HasPrefix(msgContents, "!"):
+			// do nothing
+		default:
+			h.broadcast([]byte("say" + delimstr + "<" + msg.sender.name + "> " + msgContents))
+		}
+	case "name": // nick set
 		if msg.sender.name != "" || len(msgFields) != 2 || !isOkName(msgFields[1]) || len(msgFields[1]) > 7 {
 			return err
 		}
 		msg.sender.name = msgFields[1]
+		h.broadcast([]byte("name" + delimstr + strconv.Itoa(msg.sender.id) + delimstr + msg.sender.name));
 	default:
 		return err
 	}
+
+	writeLog(msg.sender.ip, msgStr, 200)
 
 	return nil
 }
 
 func (h *Hub) isValidSpriteName(name string) bool {
 	for _, otherName := range h.spriteNames {
-		if otherName == name {
+		if otherName == strings.ToLower(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Hub) isValidSystemName(name string) bool {
+	for _, otherName := range h.systemNames {
+		if otherName == strings.ToLower(name) {
 			return true
 		}
 	}
