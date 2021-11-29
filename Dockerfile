@@ -3,14 +3,15 @@ FROM ghcr.io/horahoradev/liblcf:master_liblcf
 COPY ynoclient ynoclient
 
 # Build ynoclient
-RUN --mount=type=cache,target=/workdir/ynoclient/build/ /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && \
-	ln -s /workdir /root/workdir && cd ynoclient && \
+RUN --mount=type=cache,target=/workdir/ynoclient/build /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && \
+	ln -s /workdir /root/workdir && \
+	cd ynoclient && \
 	./cmake_build.sh && cd build && \
 	/usr/bin/ninja && \
 	echo "done"'
 
-RUN --mount=type=cache,target=/workdir/ynoclient/build/ cp /workdir/ynoclient/build/index.wasm /workdir/ynoclient/
-RUN --mount=type=cache,target=/workdir/ynoclient/build/ cp /workdir/ynoclient/build/index.js /workdir/ynoclient/
+RUN --mount=type=cache,target=/workdir/ynoclient/build cp /workdir/ynoclient/build/index.wasm /workdir/ynoclient/
+RUN --mount=type=cache,target=/workdir/ynoclient/build cp /workdir/ynoclient/build/index.js /workdir/ynoclient/
 
 FROM ubuntu:rolling
 
