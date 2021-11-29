@@ -62,5 +62,8 @@ COPY --from=0 /workdir/ynoclient/index.js /multi_server/public
 
 COPY orbs/public /multi_server/public
 
+RUN mkdir -p /multi_server/public/data/default && \
+	cp -r /multi_server/public/play/gamesdefault/* /multi_server/public/data/default
+
 ENTRYPOINT ["./multi_server"]
 

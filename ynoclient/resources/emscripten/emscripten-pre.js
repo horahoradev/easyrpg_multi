@@ -94,7 +94,7 @@ if (Module.EASYRPG_GAME === undefined) {
 }
 
 if (Module.EASYRPG_WS_URL === undefined) {
-  Module.EASYRPG_WS_URL = "wss://localhost:8080/";
+  Module.EASYRPG_WS_URL = "ws://localhost:8080/";
 }
 
 // Catch all errors occuring inside the window
