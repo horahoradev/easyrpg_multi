@@ -6,7 +6,11 @@ COPY ynoclient ynoclient
 RUN --mount=type=cache,target=/workdir/ynoclient/build/ /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && \
 	ln -s /workdir /root/workdir && cd ynoclient && \
 	./cmake_build.sh && cd build && \
-	/usr/bin/ninja && echo "done"'
+	/usr/bin/ninja && \
+	echo "done"'
+
+RUN --mount=type=cache,target=/workdir/ynoclient/build/ cp /workdir/ynoclient/build/index.wasm /workdir/ynoclient/
+RUN --mount=type=cache,target=/workdir/ynoclient/build/ cp /workdir/ynoclient/build/index.js /workdir/ynoclient/
 
 FROM ubuntu:rolling
 
@@ -52,11 +56,10 @@ RUN cd /multi_server/public/play/gamesdefault/ゆめ2っき/ && \
 
 RUN /bin/bash -c 'mv /multi_server/public/play/gamesdefault/ゆめ2っき/* /multi_server/public/play/gamesdefault/'
 
-COPY --from=0 /workdir/ynoclient/build/index.wasm /multi_server/public
-COPY --from=0 /workdir/ynoclient/build/index.js /multi_server/public
+COPY --from=0 /workdir/ynoclient/index.wasm /multi_server/public
+COPY --from=0 /workdir/ynoclient/index.js /multi_server/public
 
 COPY orbs/public /multi_server/public
-
 
 ENTRYPOINT ["./multi_server"]
 
