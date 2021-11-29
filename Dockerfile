@@ -1,23 +1,12 @@
-FROM debian:latest
+FROM ghcr.io/horahoradev/liblcf:master_liblcf
 
-WORKDIR /workdir
-
-RUN apt-get update && \
-	apt-get install -y git python3 curl cmake unzip autoconf automake libtool perl patch pkg-config ccache g++ build-essential
-
-# Build emscripten
-RUN git clone https://github.com/EasyRPG/buildscripts && \
-    cd buildscripts && \
-    cd emscripten && \
-    ./0_build_everything.sh && \
-    cd emsdk-portable
-
-RUN  /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone https://github.com/EasyRPG/liblcf && cd liblcf && export EM_PKG_CONFIG_PATH=/workdir/buildscripts/emscripten/lib/pkgconfig && autoreconf -fi && emconfigure ./configure --prefix=/workdir/buildscripts/emscripten --disable-shared && make install'
-
-RUN apt-get install -y ninja-build
+COPY ynoclient ynoclient
 
 # Build ynoclient
-RUN /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && git clone https://github.com/horahoradev/ynoclient.git && ln -s /workdir /root/workdir && cd ynoclient && ./cmake_build.sh && cd build && /usr/bin/ninja && echo "done"'
+RUN --mount=type=cache,target=/workdir/ynoclient/build/ /bin/bash -c 'source buildscripts/emscripten/emsdk-portable/emsdk_env.sh && \
+	ln -s /workdir /root/workdir && cd ynoclient && \
+	./cmake_build.sh && cd build && \
+	/usr/bin/ninja && echo "done"'
 
 FROM ubuntu:rolling
 
