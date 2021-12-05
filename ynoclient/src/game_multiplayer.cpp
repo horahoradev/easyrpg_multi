@@ -92,10 +92,9 @@ void ChatName::Draw(Bitmap& dst) {
 
 
 		// AMONG US
-		// 	void Flash(int r, int g, int b, int power, int frames);
-		auto bgCol = sys->GetShadowColor();
-
-		player.ch->Flash(bgCol.red, bgCol.green, bgCol.blue, 10, 200000);
+//		auto bgCol = sys->GetShadowColor();
+//
+//		player.ch->Flash(bgCol.red, bgCol.green, bgCol.blue, 10, 200000);
 
 		Text::Draw(*nick_img, 0, 0, *Font::Default(), *sys, 0, nick_trim);
 
