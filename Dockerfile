@@ -10,6 +10,7 @@ RUN --mount=type=cache,target=/workdir/ynoclient/build /bin/bash -c 'source buil
 	/usr/bin/ninja && \
 	echo "done"'
 
+
 RUN --mount=type=cache,target=/workdir/ynoclient/build cp /workdir/ynoclient/build/index.wasm /workdir/ynoclient/
 RUN --mount=type=cache,target=/workdir/ynoclient/build cp /workdir/ynoclient/build/index.js /workdir/ynoclient/
 
