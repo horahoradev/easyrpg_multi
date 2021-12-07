@@ -17,7 +17,7 @@ import (
 var (
 	res_index_path = "public/play/gamesdefault/index.json"
 	log_file = "logs/orbs.log"
-	NUM_ROOMS = 180 //!!! change this if not hosting yume nikki
+	NUM_ROOMS = 3000 //!!! change this if not hosting yume nikki
 )
 
 func writeLog(ip string, payload string, errorcode int) {
