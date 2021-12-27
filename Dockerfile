@@ -53,6 +53,8 @@ RUN gdown https://drive.google.com/uc?id=1c8g2XBLFQ6L6KNrmI3njhgk714uX0p3W -O ./
 
 COPY gencache /multi_server/public/play/gamesdefault/ゆめ2っき/
 
+RUN mv /multi_server/public/play/gamesdefault/ゆめ2っき/music /multi_server/public/play/gamesdefault/ゆめ2っき/Music
+
 RUN cd /multi_server/public/play/gamesdefault/ゆめ2っき/ && \
 	./gencache
 
