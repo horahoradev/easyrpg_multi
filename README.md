@@ -1,62 +1,7 @@
-# EasyRPG Player online fork
+# Ynoclient Dockerfile
+1. ./install.sh
+2. sudo docker build .
+3. sudo docker run -p 80:80 <image from step 2>
+4. visit localhost in browser
 
-Adds multiplayer functionality. 
-
-Builds for the emscripten target only.
-
-
-Server: https://github.com/twig33/orbs
-
-## Documentation
-
-Documentation is available at the documentation wiki: https://wiki.easyrpg.org
-
-## Configuring
-
-Change the server url as needed in game_multiplayer.cpp:
-```
-const std::string server_url = "wss://dry-lowlands-62918.herokuapp.com/";
-```
-## Building
-
-Follow these steps:
-
-1) Set up emscripten toolchain
-
-```
-cd
-mkdir workdir
-cd workdir
-git clone https://github.com/EasyRPG/buildscripts
-cd buildscripts
-cd emscripten
-./0_build_everything.sh
-cd emsdk-portable
-source ./emsdk_env.sh
-```
-
-2) Build liblcf
-```
-cd ~/workdir
-git clone https://github.com/EasyRPG/liblcf
-cd liblcf
-export EM_PKG_CONFIG_PATH=$HOME/workdir/buildscripts/emscripten/lib/pkgconfig
-autoreconf -fi
-emconfigure ./configure --prefix=$HOME/workdir/buildscripts/emscripten --disable-shared
-make install
-```
-
-3) Build ynoclient
-```
-cd ~/workdir
-git clone https://github.com/twig33/ynoclient
-cd ynoclient
-./cmake_build.sh
-cd build
-ninja
-```
-
-The files you want are build/index.wasm and build/index.js
-
-## Source files of interest
-Check [the initial commit.](https://github.com/twig33/ynoclient/commit/218c56586b598a9e3889ed74cd606ed699d159ca)
+This setup does not include the server. By default, the client assumes the server is available at localhost:8080.
