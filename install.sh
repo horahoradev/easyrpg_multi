@@ -3,7 +3,7 @@ set -euo pipefail -x
 
 # Create two repos
 git clone https://github.com/ynoproject/ynoclient.git
-cp -r ynoclient ynofront_modified
+cp -r ynoclient ynoclient_modified
 
 # Frontend setup
 git clone https://github.com/ynoproject/ynofront.git
