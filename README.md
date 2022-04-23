@@ -5,3 +5,5 @@
 4. visit localhost in browser
 
 This setup does not include the server. By default, the client assumes the server is available at localhost:8080.
+
+Only modify ynoclient_modified , otherwise caching won't work.
